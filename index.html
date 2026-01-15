@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bebé en Construcción</title>
+ 
+  <!-- Cargar React y ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+ 
+  <!-- Cargar Babel para traducir JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+ 
+  <!-- Cargar Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+   
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-down {
+      animation: fadeInDown 0.8s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#FBFBFD] text-slate-800 selection:bg-rose-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- ICONOS SVG INLINE (Reemplazo de lucide-react para HTML standalone) ---
+    const Heart = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+    );
+    const Calendar = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+    );
+    const RotateCcw = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const ChevronLeft = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>
+    );
+    const ChevronRight = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"/></svg>
+    );
+
+    // --- DATA ---
+    const pregnancyData = {
+      8: { development: 'Se forman los párpados y oídos', size: '1.6 cm', weight: '1 g', color: 'bg-red-100', accent: 'text-red-500' },
+      9: { development: 'Los brazos crecen y aparecen codos', size: '2.3 cm', weight: '2 g', color: 'bg-rose-100', accent: 'text-rose-500' },
+      10: { development: 'Ya puede tragar líquido amniótico', size: '3.1 cm', weight: '4 g', color: 'bg-purple-100', accent: 'text-purple-500' },
+      11: { development: 'La piel es translúcida', size: '4.1 cm', weight: '7 g', color: 'bg-lime-100', accent: 'text-lime-600' },
+      12: { development: 'Uñas de manos y pies formándose', size: '5.4 cm', weight: '14 g', color: 'bg-purple-100', accent: 'text-purple-500' },
+      13: { development: 'Tiene huellas dactilares únicas', size: '7.4 cm', weight: '23 g', color: 'bg-yellow-100', accent: 'text-yellow-500' },
+      14: { development: 'Empieza a hacer expresiones faciales', size: '8.7 cm', weight: '43 g', color: 'bg-orange-100', accent: 'text-orange-500' },
+      15: { development: 'Puede detectar luz fuera del vientre', size: '10.1 cm', weight: '70 g', color: 'bg-red-100', accent: 'text-red-400' },
+      16: { development: 'El sistema nervioso funciona', size: '11.6 cm', weight: '100 g', color: 'bg-emerald-100', accent: 'text-emerald-600' },
+      17: { development: 'El esqueleto cambia de cartílago a hueso', size: '13 cm', weight: '140 g', color: 'bg-green-100', accent: 'text-green-500' },
+      18: { development: 'Sus orejas están en posición final', size: '14.2 cm', weight: '190 g', color: 'bg-red-100', accent: 'text-red-600' },
+      19: { development: 'Se desarrolla el sentido del oído', size: '15.3 cm', weight: '240 g', color: 'bg-yellow-100', accent: 'text-yellow-600' },
+      20: { development: 'Ya puedes sentir sus movimientos', size: '16.4 cm', weight: '300 g', color: 'bg-amber-100', accent: 'text-amber-500' },
+      21: { development: 'Su sistema digestivo está madurando', size: '26.7 cm', weight: '360 g', color: 'bg-orange-100', accent: 'text-orange-600' },
+      22: { development: 'Pestañas y cejas son visibles', size: '27.8 cm', weight: '430 g', color: 'bg-rose-100', accent: 'text-rose-500' },
+      23: { development: 'Practica movimientos respiratorios', size: '28.9 cm', weight: '500 g', color: 'bg-blue-100', accent: 'text-blue-500' },
+      24: { development: 'Los pulmones desarrollan ramas', size: '30 cm', weight: '600 g', color: 'bg-indigo-100', accent: 'text-indigo-500' },
+      25: { development: 'Empieza a acumular grasa de bebé', size: '34.6 cm', weight: '660 g', color: 'bg-pink-100', accent: 'text-pink-500' },
+      26: { development: 'Sus ojos comienzan a abrirse', size: '35.6 cm', weight: '760 g', color: 'bg-purple-100', accent: 'text-purple-600' },
+      27: { development: 'Tiene ciclos de sueño y vigilia', size: '36.6 cm', weight: '875 g', color: 'bg-teal-100', accent: 'text-teal-600' },
+      28: { development: 'Ya puede parpadear sus ojos', size: '37.6 cm', weight: '1 kg', color: 'bg-cyan-100', accent: 'text-cyan-600' },
+      29: { development: 'Sus huesos se están endureciendo', size: '38.6 cm', weight: '1.15 kg', color: 'bg-yellow-100', accent: 'text-yellow-600' },
+      30: { development: 'El cerebro forma sus surcos', size: '39.9 cm', weight: '1.3 kg', color: 'bg-green-100', accent: 'text-green-600' },
+      31: { development: 'Sus 5 sentidos están activos', size: '41.1 cm', weight: '1.5 kg', color: 'bg-lime-100', accent: 'text-lime-600' },
+      32: { development: 'Practica respirar, pierde el lanugo', size: '42.4 cm', weight: '1.7 kg', color: 'bg-rose-100', accent: 'text-rose-600' },
+      33: { development: 'Su sistema inmune se fortalece', size: '43.7 cm', weight: '1.9 kg', color: 'bg-blue-100', accent: 'text-blue-600' },
+      34: { development: 'Los pulmones están casi listos', size: '45 cm', weight: '2.1 kg', color: 'bg-indigo-100', accent: 'text-indigo-600' },
+      35: { development: 'Riñones completamente desarrollados', size: '46.2 cm', weight: '2.4 kg', color: 'bg-purple-100', accent: 'text-purple-600' },
+      36: { development: 'Gana peso rápidamente (30g/día)', size: '47.4 cm', weight: '2.6 kg', color: 'bg-pink-100', accent: 'text-pink-600' },
+      37: { development: 'Considerado a término temprano', size: '48.6 cm', weight: '2.9 kg', color: 'bg-red-100', accent: 'text-red-500' },
+      38: { development: 'Agarre de manos ya es fuerte', size: '49.8 cm', weight: '3.1 kg', color: 'bg-orange-100', accent: 'text-orange-500' },
+      39: { development: 'Listo para conocer el mundo', size: '50.7 cm', weight: '3.3 kg', color: 'bg-yellow-100', accent: 'text-yellow-500' },
+      40: { development: '¡Llegó el día esperado!', size: '51.2 cm', weight: '3.5 kg', color: 'bg-green-100', accent: 'text-green-500' },
+      default: { development: 'Creciendo fuerte y sano', size: 'En crecimiento', weight: '...', color: 'bg-pink-100', accent: 'text-pink-400' }
+    };
+
+    // --- LOGIC ---
+    const START_DATE_STR = '2025-11-09T00:00:00';
+
+    const calculatePregnancyStats = () => {
+      const start = new Date(START_DATE_STR);
+      const now = new Date();
+     
+      const diffTime = Math.abs(now - start);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+     
+      const weeks = Math.floor(diffDays / 7);
+      const days = diffDays % 7;
+      const months = Math.floor(weeks / 4.3);
+      const progress = Math.min((diffDays / 280) * 100, 100);
+
+      return { weeks, days, months, progress, totalDays: diffDays };
+    };
+
+    const BabyIllustration = ({ colorClass }) => (
+      <svg viewBox="0 0 24 24" fill="none" className={`w-32 h-32 ${colorClass} opacity-80 transition-all duration-500`} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 12h.01" />
+        <path d="M15 12h.01" />
+        <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
+        <path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1" />
+      </svg>
+    );
+
+    // --- APP COMPONENT ---
+    const App = () => {
+      const [realStats, setRealStats] = useState(calculatePregnancyStats());
+      const [viewWeek, setViewWeek] = useState(null);
+      const [mounted, setMounted] = useState(false);
+
+      useEffect(() => {
+        setMounted(true);
+        const stats = calculatePregnancyStats();
+        setViewWeek(stats.weeks);
+
+        const timer = setInterval(() => {
+          setRealStats(calculatePregnancyStats());
+        }, 1000 * 60);
+        return () => clearInterval(timer);
+      }, []);
+
+      const changeWeek = (increment) => {
+        setViewWeek(prev => Math.max(1, Math.min(40, prev + increment)));
+      };
+
+      const resetToCurrent = () => {
+        setViewWeek(realStats.weeks);
+      };
+
+      if (!mounted || viewWeek === null) return null;
+
+      const currentData = pregnancyData[viewWeek] || pregnancyData.default;
+      const isCurrentWeek = viewWeek === realStats.weeks;
+      const viewProgress = Math.min((viewWeek / 40) * 100, 100);
+
+      return (
+        <div className="min-h-screen bg-[#FBFBFD] text-slate-800 font-sans selection:bg-rose-200 overflow-hidden relative">
+         
+          <div className="fixed top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-100/40 rounded-full blur-[100px] opacity-60 animate-pulse" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-indigo-50/50 rounded-full blur-[120px] opacity-60" />
+          </div>
+
+          <div className="relative z-10 max-w-md mx-auto min-h-screen flex flex-col px-6 pt-12 pb-8">
+           
+            <header className="flex justify-between items-center mb-6 fade-in-down">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-0.5">Bebé en construcción</h1>
+                <h2 className="text-sm font-bold tracking-wider text-rose-500 uppercase">Estado actual</h2>
+              </div>
+              <div className="h-12 w-12 bg-white/80 backdrop-blur-md rounded-full shadow-sm flex items-center justify-center border border-white/60">
+                <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-pulse" />
+              </div>
+            </header>
+
+            {!isCurrentWeek && (
+              <button
+                onClick={resetToCurrent}
+                className="absolute top-28 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-semibold shadow-lg flex items-center gap-2 animate-bounce cursor-pointer hover:bg-slate-800 transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Volver a la semana actual
+              </button>
+            )}
+
+            <div className="flex-1 flex flex-col justify-center mb-6">
+              <div className="bg-white/70 backdrop-blur-2xl rounded-[2.5rem] p-8 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.08)] border border-white/60 relative overflow-hidden transition-all duration-500">
+               
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
+                  <div
+                    className="h-full bg-gradient-to-r from-rose-400 to-rose-500 shadow-[0_0_10px_rgba(251,113,133,0.5)] transition-all duration-700 ease-out"
+                    style={{ width: `${viewProgress}%` }}
+                  />
+                </div>
+
+                <div className="text-center mt-2">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">
+                    {isCurrentWeek ? 'Estás cursando la semana' : 'Visualizando semana'}
+                  </p>
+                  <div className="flex items-baseline justify-center gap-2 text-slate-800">
+                    <span className="text-6xl font-bold tracking-tighter drop-shadow-sm">{viewWeek}</span>
+                  </div>
+                 
+                  {isCurrentWeek && realStats.days > 0 && (
+                    <div className="inline-block bg-rose-100 px-3 py-1 rounded-full mt-2">
+                      <p className="text-rose-600 text-xs font-bold">
+                        + {realStats.days} {realStats.days === 1 ? 'día' : 'días'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="my-8 flex flex-col items-center justify-center relative">
+                  <div className={`
+                    w-56 h-56 rounded-full
+                    flex items-center justify-center
+                    shadow-[inset_0_0_40px_rgba(0,0,0,0.02)]
+                    bg-gradient-to-b from-white to-slate-50
+                    border-4 border-white
+                    relative
+                    transition-all duration-500
+                  `}>
+                     <div className={`absolute inset-0 rounded-full opacity-30 blur-3xl ${currentData.color}`}></div>
+                     
+                     <div className={`transform transition-transform duration-700 ${isCurrentWeek ? 'scale-105' : 'scale-100'}`}>
+                       <BabyIllustration colorClass={currentData.accent} />
+                     </div>
+
+                     <div className="absolute -right-4 top-10 bg-white/90 backdrop-blur-md shadow-sm px-4 py-2 rounded-2xl border border-white/50 flex flex-col items-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Largo</span>
+                        <span className="text-sm font-bold text-slate-700">{currentData.size}</span>
+                     </div>
+                     <div className="absolute -left-4 bottom-10 bg-white/90 backdrop-blur-md shadow-sm px-4 py-2 rounded-2xl border border-white/50 flex flex-col items-center">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Peso</span>
+                        <span className="text-sm font-bold text-slate-700">{currentData.weight}</span>
+                     </div>
+                  </div>
+                 
+                  <div className="mt-8 text-center px-2">
+                    <p className="text-xs text-rose-400 font-bold uppercase tracking-widest mb-2">Desarrollo clave</p>
+                    <h3 className="text-xl font-medium text-slate-700 leading-snug">{currentData.development}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pb-4">
+              <div className="flex justify-between items-center gap-4">
+               
+                <button
+                  onClick={() => changeWeek(-1)}
+                  disabled={viewWeek <= 1}
+                  className={`flex-1 group active:scale-95 transition-all ${viewWeek <= 1 ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
+                >
+                  <div className="bg-white/50 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/40 text-center shadow-sm flex flex-col items-center justify-center h-24">
+                    <ChevronLeft className="w-5 h-5 text-slate-400 mb-1 group-hover:text-rose-400 transition-colors" />
+                    <span className="text-2xl font-bold text-slate-700/80">{Math.max(1, viewWeek - 1)}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Semana</span>
+                  </div>
+                </button>
+
+                <div className="flex flex-col items-center justify-center opacity-80">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Tiempo</span>
+                  <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-white/40 shadow-sm">
+                     <Calendar className="w-4 h-4 text-rose-400" />
+                     <span className="text-sm font-bold text-slate-600">
+                       {Math.floor(viewWeek / 4.3)} Meses
+                     </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => changeWeek(1)}
+                  disabled={viewWeek >= 40}
+                  className={`flex-1 group active:scale-95 transition-all ${viewWeek >= 40 ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
+                >
+                  <div className="bg-white/50 hover:bg-white/80 backdrop-blur-md rounded-2xl p-4 border border-white/40 text-center shadow-sm flex flex-col items-center justify-center h-24">
+                    <ChevronRight className="w-5 h-5 text-slate-400 mb-1 group-hover:text-rose-400 transition-colors" />
+                    <span className="text-2xl font-bold text-slate-700/80">{Math.min(40, viewWeek + 1)}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold">Semana</span>
+                  </div>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
